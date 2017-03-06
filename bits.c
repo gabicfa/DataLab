@@ -183,8 +183,10 @@ int bitAnd(int x, int y) {
  *   Rating: 2
  */
 int getByte(int x, int n) {
+  int x_end = (x >> (n<<3));
   int m = 8;
-  return (x >> (n<<3)) & (~(~0 << m));
+  int ones_end = (~(~0 << m));
+  return x_end & ones_end;
 }
 /*
  * logicalShift - shift x to the right by n, using a logical shift
@@ -195,7 +197,8 @@ int getByte(int x, int n) {
  *   Rating: 3
  */
 int logicalShift(int x, int n) {
-  return 2;
+  int zero_beginning = ~(((1 << 31) >> n) <<1);
+  return zero_beginning & (x >> n);
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -215,7 +218,9 @@ int bitCount(int x) {
  *   Rating: 4
  */
 int bang(int x) {
-  return 2;
+  int zero_or_not = (x & (~x+1));
+  int firt_byte = (~zero_or_not)+1;
+  return (~(firt_byte >> 31)) & 1;
 }
 /*
  * tmin - return minimum two's complement integer
@@ -224,7 +229,7 @@ int bang(int x) {
  *   Rating: 1
  */
 int tmin(void) {
-  return (0+1)<<31;
+  return (1)<<31;
 }
 /*
  * fitsBits - return 1 if x can be represented as an
@@ -237,10 +242,9 @@ int tmin(void) {
  */
 
 int fitsBits(int x, int n) {
-  // int x_f = x << (32 + ((~n) +1) );
-  // int x_b = x_f >> (32 + ((~n)+1) );
-  // return !(x_b ^ x);
-  return 2;
+  int x_forward = x << (32 + ((~n) + 1) );
+  int x_beginning = x_forward >> (32 + ((~n)+1) );
+  return !(x_beginning ^ x);
 }
 /*
  * divpwr2 - Compute x/(2^n), for 0 <= n <= 30
@@ -251,7 +255,8 @@ int fitsBits(int x, int n) {
  *   Rating: 2
  */
 int divpwr2(int x, int n) {
-    return (x>>n);
+  // x >> n if x> 0 and x >> n + 1 if x<0
+  return 2;
 }
 /*
  * negate - return -x
@@ -283,7 +288,12 @@ int isPositive(int x) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+
+  int y_x = !((y + (~x+1)) >> 31);
+
+  int extremes = (((1 << 31 & x) ^ (1 << 31 & y)) >> 31) & 1;
+
+  return (extremes & ((1 << 31 & x) >> 31)) | (y_x & !extremes);
 }
 /*
  * ilog2 - return floor(log base 2 of x), where x > 0
@@ -307,14 +317,19 @@ int ilog2(int x) {
  *   Rating: 2
  */
 unsigned float_neg(unsigned uf) {
-  int e = (uf << 1) >> 24;
-  printf("%x\n", e);
-  if( !(e ^ (~0))){
+  int n = 0x7fc00000;
+  int e = uf & n;
+
+  if(e == n){
     return uf;
   }
+
   else{
-    return (1<<31) ^ uf;
+    return  (1<<31) ^ uf;
   }
+
+
+
 }
 /*
  * float_i2f - Return bit-level equivalent of expression (float) x
